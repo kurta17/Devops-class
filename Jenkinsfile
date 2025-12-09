@@ -1,28 +1,33 @@
 pipeline {
     agent any
+
     tools {
-        go "1.24.1"
+       go "1.24.1"
     }
+
     stages {
         stage('Test') {
-            steps {
-                sh "go test ./..."
-            }
+              steps {
+                   sh "go test ./..."
+              }
         }
         stage('Build') {
             steps {
                 sh "go build main.go"
             }
         }
-        stage('Build Docker image') {
+        stage('Build Docker Image') {
             steps {
-                // Unique name every time so we never have conflicts
-                sh '''
-                    IMAGE=ttl.sh/$(whoami)-myapp-${BUILD_NUMBER}:8h
-                    docker build -t $IMAGE .
-                    echo "Pushing $IMAGE"
-                    docker push $IMAGE
-                '''
+                sh "docker build . --tag ttl.sh/myapp:2h"
+            }
+        }
+        stage('Docker Run Image') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'FILENAME', usernameVariable: 'USERNAME')]) {
+                  sh "ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@docker 'docker stop myapp || true'"
+                  sh "ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@docker 'docker rm myapp || true'"
+                  sh "ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@docker 'docker run --name myapp --detach --publish 4444:4444 ttl.sh/myapp:1h'"
+               }
             }
         }
     }
