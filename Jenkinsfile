@@ -29,6 +29,7 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                  withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://kubernetes:6443']) {
+                  sh 'kubectl run --image=ttl.sh/myapp:1h myapp'
                   sh 'kubectl apply -f deployment.yaml'
                   sh 'kubectl apply -f service.yaml'
                 }
