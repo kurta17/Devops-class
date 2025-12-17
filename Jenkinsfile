@@ -19,6 +19,7 @@ pipeline {
               withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'FILENAME', usernameVariable: 'USERNAME')]) {
                 sh 'ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@43.210.19.225 "sudo systemctl stop myapp || true"'
                 sh 'scp -o StrictHostKeyChecking=no -i ${FILENAME} main ${USERNAME}@43.210.19.225:/tmp/main_new'
+                sh 'scp -o StrictHostKeyChecking=no -i ${FILENAME} myapp.service ${USERNAME}@43.210.19.225:/tmp/myapp.service'
                 sh '''ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@43.210.19.225 "
                       sudo mv /tmp/main_new /home/ubuntu/main &&
                       sudo chmod +x /home/ubuntu/main &&
