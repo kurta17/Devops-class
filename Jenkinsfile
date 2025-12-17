@@ -19,9 +19,15 @@ pipeline {
         stage('Deploy') {
           steps {
                 withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'FILENAME', usernameVariable: 'USERNAME')]) {
-                    sh 'ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@43.210.19.225 "sudo systemctl stop myapp" || true'
-                    sh 'ssh -o StrictHostKeyChecking=no -i ${FILENAME} ${USERNAME}@43.210.19.225 "sudo systemctl start myapp" || true'
-                    sh 'scp -o StrictHostKeyChecking=no -i ${FILENAME} main ${USERNAME}@43.210.19.225:'
+                    sh '''
+                        scp -o StrictHostKeyChecking=no -i ${SSH_KEY} myapp ${SSH_USER}@43.210.19.225:/tmp/myapp
+                        ssh -o StrictHostKeyChecking=no -i ${SSH_KEY} ${SSH_USER}@43.210.19.225 "
+                            sudo mv /tmp/myapp /usr/local/bin/myapp
+                            sudo chmod +x /usr/local/bin/myapp
+                            sudo systemctl daemon-reload   # in case the unit file changed
+                            sudo systemctl restart myapp
+                            sudo systemctl status myapp --no-pager
+                    '''
                 }
             }
         }
