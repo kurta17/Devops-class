@@ -1,15 +1,15 @@
 [Unit]
-Description=My Application Service
+Description=My Go Application
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/home/laborant/main
-WorkingDirectory=/home/laborant
+ExecStart=/home/ubuntu/main
+WorkingDirectory=/home/ubuntu
 Restart=always
-RestartSec=10
-User=laborant
-Group=laborant
+RestartSec=5
+User=ubuntu
+Group=ubuntu
 
 [Install]
 WantedBy=multi-user.target
