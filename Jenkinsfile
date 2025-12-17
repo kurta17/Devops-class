@@ -24,8 +24,8 @@ pipeline {
                       sudo chmod +x /home/laborant/main &&
                       sudo chown laborant:laborant /home/laborant/main &&
                       sudo systemctl daemon-reload &&
-                      sudo systemctl restart myapp
-                      "
+                      sudo systemctl restart myapp &&
+                      sudo systemctl status myapp --no-pager || true"
                   '''
               }
           }
