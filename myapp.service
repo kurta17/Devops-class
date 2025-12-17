@@ -3,7 +3,13 @@ Description=My Application Service
 After=network.target
 
 [Service]
+Type=simple
 ExecStart=/home/laborant/main
+WorkingDirectory=/home/laborant
+Restart=always
+RestartSec=10
+User=laborant
+Group=laborant
 
 [Install]
 WantedBy=multi-user.target
