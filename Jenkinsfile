@@ -1,7 +1,7 @@
 pipeline {
     agent any
     tools {
-        go "1.24.1"
+        go "1.23"
     }
     environment {
         IMAGE = "ttl.sh/myapp-${BUILD_NUMBER}:2h"  // Unique per build
