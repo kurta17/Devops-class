@@ -40,21 +40,48 @@ pipeline {
             }
         }
         
-        stage('Deploy to Docker') {
+        stage('Deploy to Target VM') {
             steps {
-                sh '''
-                    docker stop nodejs-app || true
-                    docker rm nodejs-app || true
-                '''
-                
-                sh "docker pull ${DOCKER_IMAGE}"
-                sh "docker run -d --name nodejs-app -p 4444:4444 ${DOCKER_IMAGE}"
-                
-                sh '''
-                    sleep 5
-                    curl -f http://localhost:4444 || exit 1
-                    echo "Docker deployment successful!"
-                '''
+                withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                    sh '''
+                        scp -o StrictHostKeyChecking=no -i $SSH_KEY package.json index.js $SSH_USER@target:~/
+                    '''
+                    
+                    sh '''
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target '
+                            which node || (curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - && sudo apt-get install -y nodejs)
+                            
+                            pkill -f "node index.js" || true
+                            
+                            cd ~
+                            npm install
+                            nohup node index.js > app.log 2>&1 &
+                            
+                            sleep 3
+                            curl -f http://localhost:4444 && echo "Target VM deployment successful!"
+                        '
+                    '''
+                }
+            }
+        }
+        
+        stage('Deploy to Docker VM') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+                    sh """
+                        ssh -o StrictHostKeyChecking=no -i \$SSH_KEY \$SSH_USER@docker '
+                            docker pull ${DOCKER_IMAGE}
+                            
+                            docker stop nodejs-app || true
+                            docker rm nodejs-app || true
+                            
+                            docker run -d --name nodejs-app -p 4444:4444 ${DOCKER_IMAGE}
+                            
+                            sleep 3
+                            curl -f http://localhost:4444 && echo "Docker VM deployment successful!"
+                        '
+                    """
+                }
             }
         }
         
