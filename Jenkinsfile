@@ -6,7 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = "ttl.sh/nodejs-app-${BUILD_NUMBER}-${GIT_COMMIT[0..7]}:1h"
+        DOCKER_IMAGE = "ttl.sh/nodejs-app-${BUILD_NUMBER}:1h"
     }
     
     stages {
@@ -56,8 +56,8 @@ pipeline {
                     // Install dependencies
                     sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && npm install --silent"'
                     
-                    // Start app in background using bash -c
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "bash -c \'cd ~ && nohup node index.js > app.log 2>&1 &\'"'
+                    // Start app in background - use stdin redirect to prevent SSH hang
+                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && nohup node index.js > app.log 2>&1 < /dev/null &"'
                     
                     // Wait and verify
                     sh 'sleep 3'
