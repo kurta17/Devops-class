@@ -60,20 +60,21 @@ pipeline {
         
         stage('Deploy to Kubernetes') {
             steps {
-                // Update the deployment with the ttl.sh image
-                sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE}|' k8s/deployment.yaml"
-                
-                sh '''
-                    kubectl apply -f k8s/deployment.yaml
-                    kubectl apply -f k8s/service.yaml
-                    kubectl rollout status deployment/nodejs-app --timeout=120s
-                '''
-                
-                sh '''
-                    kubectl get pods
-                    kubectl get services
-                    echo "Kubernetes deployment successful!"
-                '''
+                withKubeConfig([credentialsId: 'k8s-token', serverUrl: 'https://kubernetes:6443']) {
+                    sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE}|' k8s/deployment.yaml"
+                    
+                    sh '''
+                        kubectl apply -f k8s/deployment.yaml
+                        kubectl apply -f k8s/service.yaml
+                        kubectl rollout status deployment/nodejs-app --timeout=120s
+                    '''
+                    
+                    sh '''
+                        kubectl get pods
+                        kubectl get services
+                        echo "Kubernetes deployment successful!"
+                    '''
+                }
             }
         }
     }
