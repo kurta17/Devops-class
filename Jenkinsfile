@@ -24,6 +24,7 @@ pipeline {
         
         stage('Unit Test') {
             steps {
+                sh 'fuser -k 4444/tcp || true'
                 sh 'npm test'
             }
         }
@@ -48,18 +49,19 @@ pipeline {
                     '''
                     
                     sh '''
-                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target '
+                        ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "
                             which node || (curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - && sudo apt-get install -y nodejs)
                             
-                            pkill -f "node index.js" || true
+                            pkill -f 'node index.js' || true
                             
                             cd ~
-                            npm install
+                            npm install --silent
                             nohup node index.js > app.log 2>&1 &
+                            disown
                             
                             sleep 3
-                            curl -f http://localhost:4444 && echo "Target VM deployment successful!"
-                        '
+                            curl -f http://localhost:4444 && echo 'Target VM deployment successful!'
+                        "
                     '''
                 }
             }
