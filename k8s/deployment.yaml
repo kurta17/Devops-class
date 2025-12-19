@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nodejs-app
+  name: myapp
   labels:
-    app: nodejs-app
+    app: myapp
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: nodejs-app
+      app: myapp
   template:
     metadata:
       labels:
-        app: nodejs-app
+        app: myapp
     spec:
       containers:
-        - name: nodejs-app
+        - name: myapp
           image: kurta17/nodejs-app:latest
           ports:
             - containerPort: 4444

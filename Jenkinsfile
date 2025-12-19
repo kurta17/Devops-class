@@ -94,7 +94,7 @@ pipeline {
                     sh '''
                         kubectl apply -f k8s/deployment.yaml
                         kubectl apply -f k8s/service.yaml
-                        kubectl rollout status deployment/nodejs-app --timeout=120s
+                        kubectl rollout status deployment/myapp --timeout=120s
                     '''
                     
                     sh '''
