@@ -6,7 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = "ttl.sh/nodejs-app-${BUILD_NUMBER}:1h"
+        DOCKER_IMAGE = "ttl.sh/nodejs-app-${BUILD_NUMBER}-${GIT_COMMIT[0..7]}:1h"
     }
     
     stages {
