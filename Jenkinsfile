@@ -41,30 +41,30 @@ pipeline {
             }
         }
         
-        stage('Deploy to Target VM') {
-            steps {
-                withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-                    // Copy files to target
-                    sh 'scp -o StrictHostKeyChecking=no -i $SSH_KEY package.json index.js $SSH_USER@target:~/'
+        // stage('Deploy to Target VM') {
+        //     steps {
+        //         withCredentials([sshUserPrivateKey(credentialsId: 'mykey', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+        //             // Copy files to target
+        //             sh 'scp -o StrictHostKeyChecking=no -i $SSH_KEY package.json index.js $SSH_USER@target:~/'
                     
-                    // Install Node.js if needed
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "which node || (curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - && sudo apt-get install -y nodejs)"'
+        //             // Install Node.js if needed
+        //             sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "which node || (curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash - && sudo apt-get install -y nodejs)"'
                     
-                    // Kill existing process
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "pkill -f node\\ index.js || true"'
+        //             // Kill existing process
+        //             sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "pkill -f node\\ index.js || true"'
                     
-                    // Install dependencies
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && npm install --silent"'
+        //             // Install dependencies
+        //             sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && npm install --silent"'
                     
-                    // Start app in background - use stdin redirect to prevent SSH hang
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && nohup node index.js > app.log 2>&1 < /dev/null &"'
+        //             // Start app in background - use stdin redirect to prevent SSH hang
+        //             sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "cd ~ && nohup node index.js > app.log 2>&1 < /dev/null &"'
                     
-                    // Wait and verify
-                    sh 'sleep 3'
-                    sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "curl -f http://localhost:4444 && echo Target VM deployment successful!"'
-                }
-            }
-        }
+        //             // Wait and verify
+        //             sh 'sleep 3'
+        //             sh 'ssh -o StrictHostKeyChecking=no -i $SSH_KEY $SSH_USER@target "curl -f http://localhost:4444 && echo Target VM deployment successful!"'
+        //         }
+        //     }
+        // }
 
         stage('Deploy to Docker VM') {
             steps {
