@@ -6,10 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_REGISTRY = 'docker.io'
-        DOCKER_IMAGE = 'kurta17/nodejs-app'
-        DOCKER_CREDENTIALS_ID = 'docker-hub-credentials'
-        KUBECONFIG_CREDENTIALS_ID = 'kubeconfig-credentials'
+        DOCKER_IMAGE = "ttl.sh/nodejs-app-${BUILD_NUMBER}:1h"
     }
     
     stages {
@@ -33,64 +30,50 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    docker.build("${DOCKER_IMAGE}:${BUILD_NUMBER}")
-                    docker.build("${DOCKER_IMAGE}:latest")
-                }
+                sh "docker build -t ${DOCKER_IMAGE} ."
             }
         }
         
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", DOCKER_CREDENTIALS_ID) {
-                        docker.image("${DOCKER_IMAGE}:${BUILD_NUMBER}").push()
-                        docker.image("${DOCKER_IMAGE}:latest").push()
-                    }
-                }
+                sh "docker push ${DOCKER_IMAGE}"
             }
         }
         
         stage('Deploy to Docker') {
             steps {
-                script {
-                    sh '''
-                        docker stop nodejs-app || true
-                        docker rm nodejs-app || true
-                    '''
-                    
-                    sh "docker run -d --name nodejs-app -p 4444:4444 ${DOCKER_IMAGE}:${BUILD_NUMBER}"
-                    
-                    sh '''
-                        sleep 5
-                        curl -f http://localhost:4444 || exit 1
-                        echo "Docker deployment successful!"
-                    '''
-                }
+                sh '''
+                    docker stop nodejs-app || true
+                    docker rm nodejs-app || true
+                '''
+                
+                sh "docker pull ${DOCKER_IMAGE}"
+                sh "docker run -d --name nodejs-app -p 4444:4444 ${DOCKER_IMAGE}"
+                
+                sh '''
+                    sleep 5
+                    curl -f http://localhost:4444 || exit 1
+                    echo "Docker deployment successful!"
+                '''
             }
         }
         
         stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    withCredentials([file(credentialsId: KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
-                        sh """
-                            sed -i 's|image: .*|image: ${DOCKER_IMAGE}:${BUILD_NUMBER}|' k8s/deployment.yaml
-                        """
-                        
-                        sh '''
-                            kubectl apply -f k8s/deployment.yaml
-                            kubectl apply -f k8s/service.yaml
-                            kubectl rollout status deployment/nodejs-app --timeout=120s
-                        '''
-                        
-                        sh '''
-                            kubectl get pods
-                            kubectl get services
-                            echo "Kubernetes deployment successful!"
-                        '''
-                    }
-                }
+                // Update the deployment with the ttl.sh image
+                sh "sed -i 's|image: .*|image: ${DOCKER_IMAGE}|' k8s/deployment.yaml"
+                
+                sh '''
+                    kubectl apply -f k8s/deployment.yaml
+                    kubectl apply -f k8s/service.yaml
+                    kubectl rollout status deployment/nodejs-app --timeout=120s
+                '''
+                
+                sh '''
+                    kubectl get pods
+                    kubectl get services
+                    echo "Kubernetes deployment successful!"
+                '''
             }
         }
     }
